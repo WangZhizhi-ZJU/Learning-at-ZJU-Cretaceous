@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <title>登录</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <link href="../../plugin/element-ui/lib/theme-chalk/index.css" rel="stylesheet">
+    <link href="../../plugin/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../../plugin/css/style.css" rel="stylesheet">
+</head>
+<body background="../../pics/login-background.png" style="background-repeat: no-repeat; background-attachment: fixed; background-size: 100% 100%; background-position: center"><!-- Table -->
+<div id="app">
+    <img src="../../pics/logo.png" style="position:absolute; left: 20px; top: 20px">
+    <el-row :gutter="12">
+        <el-col :span="8">
+            <el-card shadow="hover" style="position: absolute; left: 100px; top: 220px; width: 750px">
+                <h2 align="center" style="color: dodgerblue">学生账号登录</h2>
+                &nbsp;
+                <el-container>
+                    <el-container>
+                        <el-aside width="450px">
+                            <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+                                &nbsp;
+                                <el-form-item label="账号" prop="accountName">
+                                    <el-input style="width: 70%" v-model="ruleForm.accountName" placeholder="请输入账号邮箱或手机号" prefix-icon="el-icon-user"></el-input>&nbsp;&nbsp;&nbsp;
+                                    <el-button type="text" @click="onRegisterClick()">注册账户</el-button>
+                                </el-form-item>
+                                <el-form-item label="密码" prop="password">
+                                    <el-input style="width: 70%" v-model="ruleForm.password" placeholder="请输入密码" show-password prefix-icon="el-icon-lock"></el-input>&nbsp;&nbsp;&nbsp;
+                                    <el-button type="text">忘记密码</el-button>
+                                </el-form-item>
+                                <el-form-item label="验证码" prop="password">
+                                    <el-container>
+                                        <el-aside width="200px">
+                                            <el-input style="width: 90%" v-model="ruleForm.captcha" placeholder="请输入验证码" prefix-icon="el-icon-lock"></el-input>
+                                        </el-aside>
+                                        <el-aside>
+                                            <el-image
+                                                    style="width: 80px; height: 40px"
+                                                    :src="this.url"
+                                                    @click="refreshCaptcha()"></el-image>
+                                        </el-aside>
+                                    </el-container>
+                                </el-form-item>
+                                <el-form-item>
+                                    <el-button type="primary" @click="onSubmit()" style="width: 100px">登录</el-button>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<el-checkbox label="记住密码" name="type" v-model="ruleForm.remember"></el-checkbox>
+                                </el-form-item>
+                            </el-form>
+                        </el-aside>
+                        <el-aside width="300px">
+                            <img src="../../pics/login-card-background.png" alt="">
+                        </el-aside>
+                    </el-container>
+                </el-container>
+
+
+            </el-card>
+        </el-col>
+    </el-row>
+
+</div>
+</body>
+
+<!-- 引入组件库 -->
+<script src="../../plugin/js/vue.js"></script>
+<script src="../../plugin/element-ui/lib/index.js"></script>
+<script src="../../plugin/js/jquery.min.js" type="text/javascript"></script>
+<script src="../../plugin/js/axios-0.18.0.js"></script>
+
+<script>
+    var vue = new Vue({
+        el: '#app',
+        data: {
+            url: '/service/common/get-captcha',
+            ruleForm : {
+                accountName: '',
+                password: '',
+                captcha: '',
+                remember: false,
+            },
+            rules: {
+                accountName: [
+                    { required: true, message: '请输入用户名', trigger: 'blur' },
+                ],
+                password: [
+                    { required: true, message: '请输入密码', trigger: 'blur' },
+                ],
+                captcha: [
+                    { required: true, message: '请输入验证码', trigger: 'blur' },
+                    { max: 4, min: 4, message: '请确认输入的验证码为四位', trigger: 'blur' }
+                ]
+            }
+        },
+
+        created() {
+        },
+
+        methods: {
+            onSubmit() {
+                axios.post("http://localhost/service/student/login", this.ruleForm).then((res) => {
+                    if (res.data.code === 0) {
+                        this.$message.success(res.data.message);
+                        window.location.href = "http://localhost/page/student/index.html";
+                    } else {
+                        this.$message.error(res.data.message);
+                    }
+                })
+            },
+            submitForm(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        alert('submit!');
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                });
+            },
+            resetForm(formName) {
+                this.$refs[formName].resetFields();
+            },
+
+            refreshCaptcha() {
+                this.url = '/service/common/get-captcha?' + new Date().getMilliseconds();
+            },
+
+            onRegisterClick() {
+                window.location.href = "http://localhost/page/student/register.html";
+            }
+        }
+    })
+
+</script>
+</html>

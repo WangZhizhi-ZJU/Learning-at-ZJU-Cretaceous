@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <title>学生主页</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <link href="../../plugin/element-ui/lib/theme-chalk/index.css" rel="stylesheet">
+    <link href="../../plugin/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../../plugin/css/style.css" rel="stylesheet">
+</head>
+<body><!-- Table -->
+<div id="app">
+    <el-container style="position:absolute; top: 0; left: 0; width: 100%; height: 100%">
+        <el-aside width="300px">
+            <el-container>
+                <el-header style="height: 180px;">
+                    <br><br><br>
+                    &nbsp;&nbsp;&nbsp;<img src="../../pics/logo.png" width="222" height="72">
+                </el-header>
+                <el-menu
+                        :default-active="3"
+                        class="el-menu-vertical-demo"
+                        @open="handleOpen"
+                        @close="handleClose">
+                    <el-submenu>
+                        <template slot="title">
+                            <i class="el-icon-location"></i>
+                            <span>个人信息管理</span>
+                        </template>
+                        <el-menu-item :index="0" @click="onClick(0)">
+                            <span slot="title">{{menuList[0].name}}</span>
+                        </el-menu-item>
+                        <el-menu-item :index="1" @click="onClick(1)">
+                            <span slot="title">{{menuList[1].name}}</span>
+                        </el-menu-item>
+                        <el-menu-item :index="2" @click="onClick(2)">
+                            <span slot="title">{{menuList[2].name}}</span>
+                        </el-menu-item>
+                    </el-submenu>
+                    <el-menu-item :index="3" @click="onClick(3)">
+                        <i class="el-icon-menu"></i>
+                        <span slot="title">{{menuList[3].name}}</span>
+                    </el-menu-item>
+                </el-menu>
+                <el-footer style="position: absolute; bottom: 10px; left: 10px">
+                    <el-container>
+                        <el-aside width="65px">
+                            <el-avatar :size="50" :src="this.avatarUrl"></el-avatar>
+                        </el-aside>
+                        <el-aside width="105px">
+                            <div align="center" style="position: absolute; bottom: 38px;"><b>{{this.name}}</b></div>
+                            <div align="center" style="position: absolute; bottom: 14px;">{{this.accountID}}</div>
+                        </el-aside>
+                        <el-aside width="90px">
+                            <el-button type="danger" round style="position: absolute; bottom: 18px;" @click="onLogout()">登出</el-button>
+                        </el-aside>
+                    </el-container>
+                </el-footer>
+            </el-container>
+        </el-aside>
+        <el-container>
+            <el-header height="70px">
+                <h2>{{this.header}}</h2>
+            </el-header>
+            <el-main>
+                <iframe :src="this.mainUrl" style="width: 100%; height: 100%;" scrolling="auto" frameborder="0"></iframe>
+
+            </el-main>
+        </el-container>
+    </el-container>
+</div>
+</body>
+
+<!-- 引入组件库 -->
+<script src="../../plugin/js/vue.js"></script>
+<script src="../../plugin/element-ui/lib/index.js"></script>
+<script src="../../plugin/js/jquery.min.js" type="text/javascript"></script>
+<script src="../../plugin/js/axios-0.18.0.js"></script>
+
+<script>
+    var vue = new Vue({
+        el: '#app',
+        data: {
+            header: '成绩查询',
+            mainUrl: 'grade-query.html',
+            name: '',
+            accountID: '',
+            avatarUrl: '',
+            menuList: [
+                {
+                    id: 0,
+                    name: '基础信息修改',
+                    url: 'personal-info.html',
+                    icon: 'icon-member'
+                },
+                {
+                    id: 1,
+                    name: '头像修改',
+                    url: 'avatar.html',
+                    icon: 'icon-member'
+                },
+                {
+                    id: 2,
+                    name: '密码修改',
+                    url: 'password.html',
+                    icon: 'icon-member'
+                },
+                {
+                    id: 3,
+                    name: '成绩查询',
+                    url: 'grade-query.html',
+                    icon: 'icon-member'
+                }
+            ]
+        },
+
+        created() {
+            this.getAccount();
+        },
+
+        methods: {
+            getAccount() {
+                axios.post("http://localhost/service/student/get-account").then(res => {
+                    if (res.data.code === 1) {
+                        this.$message.error("请先登录！");
+                        setTimeout(() => {
+                            window.location.href = "http://localhost/page/student/login.html";
+                        }, 500)
+                    } else {
+                        this.name = res.data.data.name;
+                        this.accountID = res.data.data.accountID;
+                        this.avatarUrl = "http://localhost/service/common/get-avatar/" + this.accountID;
+                    }
+                });
+            },
+
+            onClick(id) {
+                console.log(id);
+                this.header = this.menuList[id].name;
+                console.log(this.header);
+                this.mainUrl = this.menuList[id].url;
+                console.log(this.mainUrl);
+            },
+
+            onLogout() {
+                axios.post("http://localhost/service/student/logout").then(res => {
+                    this.$message.success("登出成功！");
+                    setTimeout(() => {
+                        window.location.href = "http://localhost/page/student/login.html";
+                    }, 500);
+                });
+            },
+
+            handleOpen(key, keyPath) {
+                console.log(key, keyPath);
+            },
+
+            handleClose(key, keyPath) {
+                console.log(key, keyPath);
+            }
+        }
+    })
+
+</script>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <title>修改密码</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <link href="../../plugin/element-ui/lib/theme-chalk/index.css" rel="stylesheet">
+    <link href="../../plugin/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../../plugin/css/style.css" rel="stylesheet">
+    <style>
+        .avatar-uploader .el-upload {
+            border: 1px dashed #d9d9d9;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .avatar-uploader .el-upload:hover {
+            border-color: #409EFF;
+        }
+        .avatar-uploader-icon {
+            font-size: 28px;
+            color: #8c939d;
+            width: 250px;
+            height: 250px;
+            line-height: 250px;
+            text-align: center;
+        }
+        .avatar {
+            width: 250px;
+            height: 250px;
+            display: block;
+        }
+    </style>
+</head>
+<body background="../../pics/login-background.png" style="background-repeat: no-repeat; background-attachment: fixed; background-size: 100% 100%; background-position: center"><!-- Table -->
+<div id="app">
+    <el-card shadow="hover" style="position: absolute; left: 50%; top: 50%; width: 600px; height: 425px; transform: translate(-50%, -50%)">
+        <table>
+            <tr>
+                <el-alert style="width: 560px"
+                          title="温馨提示"
+                          type="success"
+                          show-icon>
+                    请<b>点击头像框</b>来上传新的头像。用作头像的图片需要满足以下条件：
+                    <li>图片为 JPG 格式。</li>
+                    <li>图片文件的大小需要在 2 MB 以内。</li>
+                    <li>为了确保头像具有最佳的显示效果，推荐上传正方形的图片作为您的头像。</li>
+                </el-alert>
+            </tr>
+            <br>
+            <tr>
+                <td width="800px">
+                    <el-upload
+                            class="avatar-uploader"
+                            :action="this.uploadUrl"
+                            :show-file-list="false"
+                            :on-success="handleAvatarSuccess"
+                            :before-upload="beforeAvatarUpload"
+                            align="center"
+                    >
+                        <img v-if="imageUrl" :src="imageUrl" class="avatar">
+                        <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                    </el-upload>
+                </td>
+                <td>
+                </td>
+            </tr>
+        </table>
+    </el-card>
+
+</div>
+</body>
+
+<!-- 引入组件库 -->
+<script src="../../plugin/js/vue.js"></script>
+<script src="../../plugin/element-ui/lib/index.js"></script>
+<script src="../../plugin/js/jquery.min.js" type="text/javascript"></script>
+<script src="../../plugin/js/axios-0.18.0.js"></script>
+
+<script>
+    var vue = new Vue({
+        el: '#app',
+        data() {
+            return {
+                imageUrl: '',
+                uploadUrl: '',
+                account: {
+                },
+            }
+        },
+
+        created() {
+            this.getInfo();
+        },
+
+        methods: {
+            getInfo() {
+                axios.post("http://localhost/service/student/get-info").then(res => {
+                    if (res.data.code === 1) {
+                        this.$message.warning(this.data.message);
+                        setTimeout(() => {
+                            window.parent.location.href = "http://localhost/page/student/login.html";
+                        }, 500);
+                    } else {
+                        this.account = res.data.data;
+                        this.imageUrl = "http://localhost/service/common/get-avatar/" + this.account.accountID;
+                        this.uploadUrl = "http://localhost/service/common/set-avatar/" + this.account.accountID;
+                    }
+                });
+            },
+
+            handleAvatarSuccess(res, file) {
+                if (res.data === true) {
+                    this.$message.success("头像修改成功！");
+                    setTimeout(() => {
+                        window.parent.location.href = "http://localhost/page/student/index.html";
+                    }, 500);
+                } else {
+                    this.$message.error(res.message);
+                }
+            },
+
+            beforeAvatarUpload(file) {
+                const isJPG = file.type === 'image/jpeg';
+                const isLt2M = file.size / 1024 / 1024 < 2;
+
+                if (!isJPG) {
+                    this.$message.error('上传头像图片只能是 JPG 格式!');
+                }
+                if (!isLt2M) {
+                    this.$message.error('上传头像图片大小不能超过 2MB!');
+                }
+                return isJPG && isLt2M;
+            },
+        }
+    })
+</script>
+</html>

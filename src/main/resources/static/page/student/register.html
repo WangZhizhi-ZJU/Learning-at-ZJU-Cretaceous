@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <title>基础信息修改</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <link href="../../plugin/element-ui/lib/theme-chalk/index.css" rel="stylesheet">
+    <link href="../../plugin/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../../plugin/css/style.css" rel="stylesheet">
+    <style>
+        .avatar-uploader .el-upload {
+            border: 1px dashed #d9d9d9;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .avatar-uploader .el-upload:hover {
+            border-color: #409EFF;
+        }
+        .avatar-uploader-icon {
+            font-size: 28px;
+            color: #8c939d;
+            width: 80px;
+            height: 80px;
+            line-height: 80px;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            display: block;
+        }
+    </style>
+</head>
+<body background="../../pics/login-background.png" style="background-repeat: no-repeat; background-attachment: fixed; background-size: 100% 100%; background-position: center"><!-- Table -->
+<div id="app">
+    <el-container>
+        <el-header style="height: 100px;"></el-header>
+        <el-main style="background: none; bottom: 100px">
+            <el-card shadow="hover" style="position: relative; left: 50%; width: 600px; height: 1270px; transform: translate(-50%)">
+                <h1 align="center" style="color: dodgerblue">学生账号注册</h1>
+                    <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="130px" class="demo-ruleForm">
+                        <el-alert style="width: 560px"
+                                  title="温馨提示"
+                                  type="success"
+                                  show-icon>
+                            欢迎您加入<b>学在浙大</b>平台，接下来请您按照页面表单中的提示如实填写您的个人信息。
+                            <li>您使用的手机号和身份证号都将作为您在本平台的身份标识，如果发现您填写的手机号或身份证号已经被注册且非您本人注册，请联系平台管理员。</li>
+                            <li>请按照“学院”→“专业”→“专业班级”的顺序依次选择您的学籍信息。</li>
+                            <li>为了更好地显示效果，推荐您上传大小小于 2 MB，JPG 格式的正方形图片作为头像。您也可以不上传头像，系统将为您分配一个默认头像。</li>
+                        </el-alert>
+                        <br>
+                        <el-form-item label="账号" prop="accountName">
+                            <el-input style="width: 70%" v-model="ruleForm.accountName" prefix-icon="el-icon-user-solid"></el-input>
+                        </el-form-item>
+                        <el-form-item label="密码" prop="password">
+                            <el-input style="width: 70%" v-model="ruleForm.password" prefix-icon="el-icon-key" show-password></el-input>
+                        </el-form-item>
+                        <el-form-item label="头像">
+                            <el-upload
+                                    class="avatar-uploader"
+                                    action="http://localhost/service/common/upload-avatar"
+                                    :show-file-list="false"
+                                    :on-success="handleAvatarSuccess"
+                                    :before-upload="beforeAvatarUpload">
+                                <img v-if="imageUrl" :src="imageUrl" class="avatar">
+                                <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                            </el-upload>
+                        </el-form-item>
+                        <el-form-item label="姓名" prop="name">
+                            <el-input style="width: 70%" v-model="ruleForm.name" prefix-icon="el-icon-user"></el-input>
+                        </el-form-item>
+                        <el-form-item label="手机号" prop="phone">
+                            <el-input style="width: 70%" v-model="ruleForm.phone" prefix-icon="el-icon-phone"></el-input>
+                        </el-form-item>
+                        <el-form-item label="身份证号" prop="personalID">
+                            <el-input style="width: 70%" v-model="ruleForm.personalID" prefix-icon="el-icon-s-custom"></el-input>
+                        </el-form-item>
+                        <el-form-item label="学院" prefix-icon="el-icon-s-home" prop="collegeID">
+                            <el-select v-model="ruleForm.collegeID" filterable placeholder="选择开课学院" @change="onCollegeChange()">
+                                <el-option
+                                        v-for="item in collegeList"
+                                        :key="item.collegeID"
+                                        :label="item.collegeName"
+                                        :value="item.collegeID">
+                                    <span style="float: left">{{ item.collegeName }}</span>
+                                    <span style="float: right; color: #8492a6; font-size: 13px">{{ item.collegeID }}</span>
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="专业" prefix-icon="el-icon-s-home" prop="majorID">
+                            <el-select v-model="ruleForm.majorID" filterable placeholder="选择专业" @change="onMajorChange()">
+                                <el-option
+                                        v-for="item in majorList"
+                                        :key="item.majorID"
+                                        :label="item.majorName"
+                                        :value="item.majorID">
+                                    <span style="float: left">{{ item.majorName }}</span>
+                                    <span style="float: right; color: #8492a6; font-size: 13px">{{ item.majorID }}</span>
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="专业班级" prefix-icon="el-icon-s-home" prop="majorClassID">
+                            <el-select v-model="ruleForm.majorClassID" filterable placeholder="选择专业班级">
+                                <el-option
+                                        v-for="item in majorClassList"
+                                        :key="item.majorClassID"
+                                        :label="item.majorClassName"
+                                        :value="item.majorClassID">
+                                    <span style="float: left">{{ item.majorClassName }}</span>
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="性别" prop="gender" prefix-icon="el-icon-fork-spoon">
+                            <el-radio v-model="ruleForm.gender" :label="1">男</el-radio>
+                            <el-radio v-model="ruleForm.gender" :label="2">女</el-radio>
+                        </el-form-item>
+                        <el-form-item label="入学日期" prefix-icon="el-icon-date" prop="joinDate">
+                            <el-date-picker
+                                    v-model="ruleForm.joinDate"
+                                    type="date"
+                                    placeholder="选择日期"
+                                    value-format="yyyy-MM-dd"
+                            >
+                            </el-date-picker>
+                        </el-form-item>
+                        <el-form-item label="生日" prefix-icon="el-icon-date" prop="birthDate">
+                            <el-date-picker
+                                    v-model="ruleForm.birthDate"
+                                    type="date"
+                                    placeholder="选择日期"
+                                    value-format="yyyy-MM-dd"
+                            >
+                            </el-date-picker>
+                        </el-form-item>
+                        <el-form-item label="地区" prop="region">
+                            <el-input style="width: 70%" v-model="ruleForm.region" prefix-icon="el-icon-map-location"></el-input>
+                        </el-form-item>
+                        <el-form-item label="验证码" prop="captcha">
+                            <el-container>
+                                <el-aside width="200px">
+                                    <el-input style="width: 90%" v-model="captcha" placeholder="请输入验证码" prefix-icon="el-icon-key"></el-input>
+                                </el-aside>
+                                <el-aside>
+                                    <el-image
+                                            style="width: 80px; height: 40px"
+                                            :src="this.url"
+                                            @click="refreshCaptcha()"></el-image>
+                                </el-aside>
+                            </el-container>
+                        </el-form-item>
+                        <el-form-item>
+                            <el-button type="primary" @click="onSubmit()" style="width: 130px; position: absolute; right: 50%; transform: translate(-15%, 0%)">保存修改信息</el-button>
+                        </el-form-item>
+                    </el-form>
+            </el-card>
+        </el-main>
+    </el-container>
+
+</div>
+</body>
+
+<!-- 引入组件库 -->
+<script src="../../plugin/js/vue.js"></script>
+<script src="../../plugin/element-ui/lib/index.js"></script>
+<script src="../../plugin/js/jquery.min.js" type="text/javascript"></script>
+<script src="../../plugin/js/axios-0.18.0.js"></script>
+
+<script>
+    var vue = new Vue({
+        el: '#app',
+        data() {
+            var validateIdCard = (rule, code, callback) => {
+                if (code == '') {
+                    callback(new Error("身份证号不能为空！"));
+                    return;
+                } else if (code.length !== 18) {
+                    callback(new Error("身份证号长度错误！"));
+                    return;
+                }
+                var city = { 11: "北京", 12: "天津", 13: "河北", 14: "山西", 15: "内蒙古", 21: "辽宁", 22: "吉林", 23: "黑龙江 ", 31: "上海", 32: "江苏", 33: "浙江", 34: "安徽", 35: "福建", 36: "江西", 37: "山东", 41: "河南", 42: "湖北 ", 43: "湖南", 44: "广东", 45: "广西", 46: "海南", 50: "重庆", 51: "四川", 52: "贵州", 53: "云南", 54: "西藏 ", 61: "陕西", 62: "甘肃", 63: "青海", 64: "宁夏", 65: "新疆", 71: "台湾", 81: "香港", 82: "澳门", 91: "国外 " };
+                var tip = "";
+                var pass = true;
+
+                if (!code || !/^\d{6}(18|19|20)?\d{2}(0[1-9]|1[12])(0[1-9]|[12]\d|3[01])\d{3}(\d|X)$/i.test(code)) {
+                    callback(new Error("身份证号格式错误！"));
+                    return;
+                }
+
+                if (!city[code.substr(0, 2)]) {
+                    callback(new Error("地址编码错误！"));
+                    return;
+                }
+                if (code.length == 18) {
+                    var sBirthday = code.substr(6, 4) + "-" + Number(code.substr(10, 2)) + "-" + Number(code.substr(12, 2));
+                    var d = new Date(sBirthday.replace(/-/g, "/"))
+                    if (sBirthday !== (d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate())) {
+                        callback(new Error("非法生日！"));
+                        return;
+                    }
+                }
+                //18位身份证需要验证最后一位校验位
+                if (code.length == 18) {
+                    code = code.split('');
+                    //∑(ai×Wi)(mod 11)
+                    //加权因子
+                    var factor = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+                    //校验位
+                    var parity = [1, 0, 'X', 9, 8, 7, 6, 5, 4, 3, 2];
+                    var sum = 0;
+                    var ai = 0;
+                    var wi = 0;
+                    for (var i = 0; i < 17; i++) {
+                        ai = code[i];
+                        wi = factor[i];
+                        sum += ai * wi;
+                    }
+                    var last = parity[sum % 11];
+                    if (parity[sum % 11] != code[17]) {
+                        callback(new Error("身份证号校验位错误！"));
+                        return;
+                    }
+                }
+                callback();
+            };
+            var validatePhone = (rule, value, callback) => {
+                var reg = 11 && /^((13|14|15|16|17|18|19)[0-9]{1}\d{8})$/;
+                if (value === '') {
+                    callback(new Error('请输入手机号'));
+                } else if (!reg.test(value)) {
+                    callback(new Error('手机号码格式不正确!'));
+                } else {
+                    callback();
+                }
+            };
+            var checkCaptcha = (rule, value, callback) => {
+                if (this.captcha === '') {
+                    callback(new Error("验证码不能为空！"));
+                }
+                else if (this.captcha.trim().length !== 4) {
+                    callback(new Error("请确保验证码长度是四位！"));
+                }
+            };
+            return {
+                url: '/service/common/get-captcha',
+                file: '',
+                imageUrl: '',
+                ruleForm : {
+                    accountName: "",
+                    password: "",
+                    name: "",
+                    phone: "",
+                    personalID: "",
+                    collegeID: "",
+                    majorID: "",
+                    majorClassID: "",
+                    gender: 1,
+                    joinDate: "",
+                    birthDate: "",
+                    region: ""
+                },
+                collegeList: [],
+                majorList: [],
+                majorClassList: [],
+                captcha: '',
+                rules: {
+                    phone: [
+                        { required: true, message: '请输入手机号!', trigger: 'blur' },
+                        { max: 11, min: 11, message: '请确认输入的手机号为11位!', trigger: 'blur' },
+                        { validator: validatePhone, trigger: 'blur'}
+                    ],
+                    birthDate: [
+                        { required: true, message: '请选择您的生日！', trigger: 'blur' },
+                    ],
+                    joinDate: [
+                        { required: true, message: '请选择您的入学时间！', trigger: 'blur' },
+                    ],
+                    accountName: [
+                        { required: true, message: '账号不能为空！', trigger: 'blur' },
+                    ],
+                    name: [
+                        { required: true, message: '姓名不能为空！', trigger: 'blur' },
+                    ],
+                    password: [
+                        { required: true, message: '密码不能为空！', trigger: 'blur' },{ max: 18, min: 6, message: '请确认输入的密码为6到18位!', trigger: 'blur' },
+                    ],
+                    region: [
+                        { required: true, message: '请输入所在地区！', trigger: 'blur' },
+                    ],
+                    captcha : [
+                        { validator: checkCaptcha, trigger: 'blur' }
+                    ],
+                    personalID: [
+                        { required: true, message: '身份证不能为空！', trigger: 'blur' },
+                        { validator: validateIdCard, trigger: 'blur' }
+                    ],
+                    collegeID: [
+                        { required: true, message: '所在学院不能为空！', trigger: 'blur' },
+                    ],
+                    majorID: [
+                        { required: true, message: '专业不能为空！', trigger: 'blur' },
+                    ],
+                    majorClassID: [
+                        { required: true, message: '专业班级不能为空！', trigger: 'blur' },
+                    ]
+                }
+            }
+        },
+
+        created() {
+            this.getCollegeList();
+        },
+
+        methods: {
+            getCollegeList() {
+                axios.post("http://localhost/service/common/get-college-list").then((res) => {
+                    this.collegeList = res.data.data;
+                });
+            },
+
+            refreshCaptcha() {
+                this.url = '/service/common/get-captcha?' + new Date().getMilliseconds();
+            },
+
+            onCollegeChange() {
+                console.log(this.ruleForm.collegeID);
+                axios.post("http://localhost/service/common/get-major-list/" + this.ruleForm.collegeID).then((res) => {
+                    this.majorList = res.data.data;
+                });
+            },
+
+            onMajorChange() {
+                axios.post("http://localhost/service/common/get-major-class-list/" + this.ruleForm.majorID).then((res) => {
+                    this.majorClassList = res.data.data;
+                });
+            },
+
+            handleAvatarSuccess(res, file) {
+                this.file = file.raw;
+                console.log(this.file);
+                this.imageUrl = URL.createObjectURL(file.raw);
+            },
+
+            beforeAvatarUpload(file) {
+                const isJPG = file.type === 'image/jpeg';
+                const isLt2M = file.size / 1024 / 1024 < 2;
+
+                if (!isJPG) {
+                    this.$message.error('上传头像图片只能是 JPG 格式!');
+                }
+                if (!isLt2M) {
+                    this.$message.error('上传头像图片大小不能超过 2MB!');
+                }
+                return isJPG && isLt2M;
+            },
+
+            onSubmit() {
+                this.$confirm("您正在提交注册申请，请确保您填写的信息无误！ ", "提示", {
+                    confirmButtonText: '提交',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    var valid = true;
+                    this.$refs["ruleForm"].validate(v => {
+                        if (!v) {
+                            valid = false;
+                        }
+                    });
+                    if (!valid) {
+                        this.$message.error("填写信息有误，请检查后再重新提交！");
+                        return;
+                    }
+                    axios.post("http://localhost/service/student/register/" + this.captcha, this.ruleForm).then((res) => {
+                        if (res.data.code === 0) {
+                            // 基础信息没问题后，再上传头像，此时 accountID 在 session 中
+                            console.log(this.file);
+                            var formData = new FormData();
+                            formData.append('file', this.file)
+                            axios.post("http://localhost/service/student/register-avatar", formData, {
+                                headers: {
+                                    'content-type': "multipart/form-data"
+                                }
+                            }).then((res) => {
+                                if (res.data.code === 0) {
+                                    this.$message.success("注册成功，将自动跳转到登录页面！");
+                                    setTimeout(() => {
+                                        window.parent.location.href = "http://localhost/page/student/login.html";
+                                    }, 3000);
+                                } else {
+                                    // 注意：这里是用户注册已经成功，但是头像上传存在一定问题
+                                    this.$message.warning(res.data.message);
+                                    setTimeout(() => {
+                                        window.parent.location.href = "http://localhost/page/student/login.html";
+                                    }, 3000);
+                                }
+                            });
+                        } else {
+                            this.$message.error(res.data.message);
+                        }
+                    })
+                }).catch(() => {
+
+                });
+            }
+        }
+    })
+
+</script>
+</html>

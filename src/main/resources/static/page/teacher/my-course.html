@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <title>添加新课程</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <link href="../element-ui/lib/theme-chalk/index.css" rel="stylesheet">
+    <link href="../font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+</head>
+<body><!-- Table -->
+<div id="app">
+    <div class="content-header">
+        <h1>我的课程</h1>
+    </div>
+    <div class="app-container">
+        <div class="box">
+            <div>
+
+                <!-- 添加课程按钮 -->
+                <el-button class="butT" type="primary" @click="dialogFormVisible = true">添加课程</el-button>
+            </div>
+        </div>
+    </div>
+    <div class="content-header">
+        <h3>正在进行中的课程</h3>
+    </div>
+    <div class="app-container">
+        <div class="box">
+            <div>
+                <!--  -->
+                <el-table :data="courseListIP" current-row-key="id" highlight-current-row size="small" stripe>
+                    <el-table-column align="center" label="课程号" prop="courseID"></el-table-column>
+                    <el-table-column align="center" label="课程名" prop="courseName"></el-table-column>
+                    <el-table-column align="center" label="开课老师" prop="teacher"></el-table-column>
+                    <el-table-column align="center" label="开课学院" prop="college"></el-table-column>
+                    <el-table-column align="center" label="学分" prop="courseCredit"></el-table-column>
+                    <el-table-column align="center" label="容量" prop="studentsLimit"></el-table-column>
+                    <el-table-column prop="description" label="描述" align="center" min-width="300%"></el-table-column>
+                    <el-table-column align="center" label="状态" prop="state">
+                        <template #default="scope">
+                            {{getChineseState(scope.row.state)}}
+                        </template>
+                    </el-table-column>
+                </el-table>
+                <div class="block" align="center">
+                    <el-pagination
+                            @size-change="handleSizeChangeIP"
+                            @current-change="handleCurrentChangeIP"
+                            :current-page="currentPageIP"
+                            :page-sizes="[10, 15, 25, 50]"
+                            :page-size="100"
+                            layout="total, sizes, prev, pager, next, jumper"
+                            :total="courseListIP == null ? 0 : totalItemsIP">
+                    </el-pagination>
+                </div>
+
+                <!-- 添加课程弹窗 -->
+                <el-dialog title="添加课程" :visible.sync="dialogFormVisible" :before-close="handleClose" width="36%">
+                    <el-form :model="form">
+                        <el-form-item label="课程名称" :label-width="formLabelWidth" style="width: 500px">
+                            <el-input v-model="form.courseName" autocomplete="off" placeholder="输入课程名"></el-input>
+                        </el-form-item>
+                        <el-form-item label="开课学院" :label-width="formLabelWidth">
+                            <el-select v-model="form.collegeID" filterable placeholder="选择开课学院">
+                                <el-option
+                                        v-for="item in collegeList"
+                                        :key="item.collegeID"
+                                        :label="item.collegeName"
+                                        :value="item.collegeID">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="课程类别" :label-width="formLabelWidth">
+                            <template>
+                                <el-select v-model="form.courseTypeID" filterable placeholder="请选择课程类别">
+                                    <el-option
+                                            v-for="item in courseTypeList"
+                                            :key="item.courseTypeID"
+                                            :label="item.courseTypeName"
+                                            :value="item.courseTypeID">
+                                        <span style="float: left">{{ item.courseTypeName }}</span>
+                                        <span style="float: right; color: #8492a6; font-size: 13px">{{ item.courseTypeID }}</span>
+                                    </el-option>
+                                </el-select>
+                            </template>
+                        </el-form-item>
+                        <el-form-item label="教师" :label-width="formLabelWidth">
+                            <el-input
+                                    placeholder="请输入内容"
+                                    v-model="form.teacher + '（' + form.teacherID + '）'"
+                                    :disabled="true"
+                                    style="width: 300px"
+                            >
+                            </el-input>
+                        </el-form-item>
+                        <el-form-item label="学分" :label-width="formLabelWidth">
+                            <template>
+                                <el-input-number v-model="form.courseCredit" :precision="1" :step="0.5" :max="10" :min="0.5" size="medium"></el-input-number>
+                            </template>
+                        </el-form-item>
+                        <el-form-item label="人数限制" :label-width="formLabelWidth">
+                            <template>
+                                <el-input-number v-model="form.studentsLimit" :precision="0" :step="5" :max="400" :min="5" size="medium"></el-input-number>
+                            </template>
+                        </el-form-item>
+                        <el-form-item label="开课日期" :label-width="formLabelWidth">
+                            <el-date-picker
+                                    v-model="form.startDate"
+                                    type="date"
+                                    placeholder="选择日期">
+                            </el-date-picker>
+                        </el-form-item>
+                        <el-form-item label="结课日期" :label-width="formLabelWidth">
+                            <el-date-picker
+                                    v-model="form.finishDate"
+                                    type="date"
+                                    placeholder="选择日期">
+                            </el-date-picker>
+                        </el-form-item>
+                        <el-form-item label="课程简介" :label-width="formLabelWidth">
+                            <el-input
+                                    type="textarea"
+                                    autosize
+                                    placeholder="请输入内容"
+                                    v-model="form.description"
+                                    style="width: 400px">
+                            </el-input>
+                        </el-form-item>
+                        <div style="margin: 20px 0;"></div>
+                    </el-form>
+                    <div slot="footer" class="dialog-footer">
+                        <el-button @click="dialogFormVisible = false">取 消</el-button>
+                        <el-button type="primary" @click="onSubmit()">确 定</el-button>
+                    </div>
+                </el-dialog>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+<!-- 引入组件库 -->
+<script src="../js/vue.js"></script>
+<script src="../element-ui/lib/index.js"></script>
+<script src="../js/jquery.min.js" type="text/javascript"></script>
+<script src="../js/axios-0.18.0.js"></script>
+
+<script>
+    const stateMap = {
+        0: '未审核',
+        1: '审核不通过',
+        2: '正在选课',
+        3: '进行中',
+        4: '课程暂停',
+        5: '课程结束',
+        6: '课程终止'
+    };
+    var vue = new Vue({
+        el: '#app',
+        data: {
+            collegeList: [],
+            courseTypeList: [],
+            inProgressList: [],
+            dialogFormVisible: false,
+            form: {
+                courseName: '',
+                collegeID: 100,
+                courseCredit: 2.0,
+                courseTypeID: 100000,
+                studentsLimit: 50,
+                teacherID: 0,
+                startDate: '',
+                finishDate: '',
+                description: ''
+            },
+            formLabelWidth: '120px',
+
+            currentPageIP: 1,
+            itemsPerPageIP: 10,
+            courseListIP: [],
+            totalItemsIP: 0
+        },
+
+        created() {
+            this.getTeacher();
+            this.getCourseTypeList();
+            this.getCollegeList();
+        },
+
+        methods: {
+
+            getTeacher() {
+                axios.post("/teacher-service/course/get-teacher").then((res) => {
+                    this.form.teacherID = res.data.data.accountID;
+                    this.form.teacher = res.data.data.name;
+                    if (this.form.teacherID === 0) {
+                        return;
+                    }
+                    this.getInProgressCourse()
+                });
+            },
+
+            getCourseTypeList() {
+                axios.post("/teacher-service/course/get-course-type").then((res) => {
+                    this.courseTypeList = res.data.data;
+                });
+            },
+
+            getCollegeList() {
+                axios.post("/teacher-service/course/get-colleges").then((res) => {
+                    this.collegeList = res.data.data;
+                });
+            },
+
+            getInProgressCourse() {
+                axios.get("/teacher-service/course/get-in-progress-course?teacherID=" + this.form.teacherID + "&currentPage=" + this.currentPageIP + "&itemsPerPage=" + this.itemsPerPageIP).then((res) => {
+                    this.courseListIP = res.data.data.data;
+                    this.totalItemsIP = res.data.data.total;
+                });
+            },
+
+            getChineseState(state) {
+                return stateMap[state];
+            },
+
+            handleClose(done) {
+                this.$confirm('确认关闭，未提交的课程信息不会被保存？').then(_ => {done();}).catch(_ => {});
+            },
+
+            onSubmit() {
+                this.dialogFormVisible = false;
+                axios.post("/teacher-service/course/add-course", this.form).then((res) => {
+                    console.log(res.data);
+                });
+            },
+
+            handleSizeChangeIP(val) {
+                this.itemsPerPageIP = val;
+                this.getInProgressCourse();
+            },
+
+            handleCurrentChangeIP(val) {
+                this.currentPageIP = val;
+                this.getInProgressCourse();
+            }
+        }
+    })
+
+</script>
+</html>
